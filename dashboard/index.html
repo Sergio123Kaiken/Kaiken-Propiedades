@@ -1,0 +1,394 @@
+<title>Kaiken Inmobiliaria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Layout: header de supuestos arriba, KPIs de estado, proyección con gráficos, matriz de escenarios y tabla de propiedades editable. */
+:root{
+  --bg:#f5f7f7; --surface:#ffffff; --surface-2:#eef2f2; --line:#dbe2e2;
+  --fg:#111a1c; --fg-2:#4a5759; --fg-3:#76837f;
+  --accent:#0f5f6b; --accent-soft:#dcecee;
+  --s-value:#2a78d6; --s-debt:#eb6834; --s-equity:#1baf7a; --s-noi:#2a78d6;
+  --good:#1d7a3a; --warn:#a86a00; --crit:#b3261e;
+  --warn-bg:#fff4dc; --good-bg:#e3f3e7; --crit-bg:#fbe5e3;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1516; --surface:#172021; --surface-2:#1e2a2b; --line:#2b3a3b;
+  --fg:#eef3f2; --fg-2:#b5c2c0; --fg-3:#8a9795;
+  --accent:#5fb8c4; --accent-soft:#1c3538;
+  --s-value:#3987e5; --s-debt:#d95926; --s-equity:#199e70; --s-noi:#3987e5;
+  --good:#5cc27a; --warn:#e0a53a; --crit:#f08078;
+  --warn-bg:#35290f; --good-bg:#15301f; --crit-bg:#3a1c1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1516; --surface:#172021; --surface-2:#1e2a2b; --line:#2b3a3b;
+  --fg:#eef3f2; --fg-2:#b5c2c0; --fg-3:#8a9795;
+  --accent:#5fb8c4; --accent-soft:#1c3538;
+  --s-value:#3987e5; --s-debt:#d95926; --s-equity:#199e70; --s-noi:#3987e5;
+  --good:#5cc27a; --warn:#e0a53a; --crit:#f08078;
+  --warn-bg:#35290f; --good-bg:#15301f; --crit-bg:#3a1c1a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:24px 48px;display:grid;gap:22px}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-family:var(--f-display);font-weight:600;font-size:clamp(24px,3.4vw,34px);letter-spacing:-.01em}
+h2{font-size:15px;font-weight:700;letter-spacing:.01em}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--fg-3);font-weight:600}
+.muted{color:var(--fg-2)} .small{font-size:12px}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}
+.mock{display:inline-flex;align-items:center;gap:6px;background:var(--warn-bg);color:var(--warn);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+/* controles */
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px 22px;align-items:start}
+.ctl label{display:block;font-size:12px;font-weight:600;color:var(--fg-2);margin-bottom:6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{font:inherit;font-weight:600;border:0;background:transparent;color:var(--fg-2);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.seg button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=number],select{font:inherit;font-family:var(--f-mono);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;width:86px}
+.unit{font-size:12px;color:var(--fg-3)}
+details.more summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:13px}
+details.more .controls{margin-top:14px}
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+#kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:760px){#kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:4px;align-content:start}
+.kpi .v{font-family:var(--f-mono);font-size:22px;font-weight:500;letter-spacing:-.02em}
+.kpi .s{font-size:12px;color:var(--fg-2)}
+.kpi.hero{background:var(--accent-soft);border-color:transparent}
+.kpi.hero .v{font-size:28px;color:var(--fg)}
+.chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:600}
+.chip.good{background:var(--good-bg);color:var(--good)} .chip.warn{background:var(--warn-bg);color:var(--warn)} .chip.crit{background:var(--crit-bg);color:var(--crit)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:18px}
+.chartbox{position:relative;height:300px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--fg-2);margin-bottom:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+/* tablas */
+.tscroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3);font-weight:600;background:var(--surface)}
+td.l,th.l{text-align:left}
+td input[type=number]{width:84px;padding:3px 6px;text-align:right}
+tfoot td{font-weight:700;border-top:2px solid var(--line)}
+.matrix td{font-family:var(--f-mono);font-variant-numeric:tabular-nums;cursor:pointer}
+.matrix td.sel{background:var(--accent-soft);font-weight:600;outline:2px solid var(--accent);outline-offset:-2px}
+.matrix td:hover{background:var(--surface-2)}
+.sortbtn{font:inherit;text-transform:inherit;letter-spacing:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;font-weight:600}
+.sortbtn:hover{color:var(--fg)}
+.sortbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+th[aria-sort=ascending] .sortbtn,th[aria-sort=descending] .sortbtn{color:var(--accent)}
+.arr{font-size:9px}
+.prop-name{max-width:280px;overflow:hidden;text-overflow:ellipsis;display:block}
+.notes{display:grid;gap:6px;font-size:13px;color:var(--fg-2);padding-left:18px;margin:0}
+.tag-missing{color:var(--warn);font-size:11px;font-weight:600}
+.split{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}
+@media (max-width:820px){.split{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div style="display:grid;gap:6px">
+      <span class="eyebrow">Kaiken · Área inmobiliaria · Importadora Hevia SpA</span>
+      <h1>Valor y proyección del área inmobiliaria</h1>
+      <span class="muted small">Montos en UF reales. Corte al 1 de octubre de 2026. Año 1 = oct 2026 a sep 2027.</span>
+    </div>
+    <span class="mock" title="Faltan precios de compra y arriendos reales">Mockup · arriendos estimados, precios de compra pendientes</span>
+  </header>
+
+  <section class="panel" aria-label="Supuestos">
+    <div class="controls">
+      <div class="ctl"><label>Horizonte</label>
+        <div class="row"><div class="seg" id="segH"><button data-v="10">10 años</button><button data-v="12">12 años</button><button data-v="15">15 años</button></div>
+        <input type="number" id="inH" min="1" max="30" step="1" aria-label="Horizonte personalizado"><span class="unit">años</span></div></div>
+      <div class="ctl"><label>Plusvalía anual</label>
+        <div class="row"><div class="seg" id="segG"><button data-v="1">1%</button><button data-v="2">2%</button><button data-v="3">3%</button></div>
+        <input type="number" id="inG" min="-5" max="10" step="0.1" aria-label="Plusvalía personalizada"><span class="unit">%</span></div></div>
+      <div class="ctl"><label for="inR">Tasa de descuento (real UF)</label>
+        <div class="row"><input type="number" id="inR" min="0" max="25" step="0.25"><span class="unit">% anual</span></div></div>
+      <div class="ctl"><label for="inY">Renta bruta estimada sobre tasación</label>
+        <div class="row"><input type="number" id="inY" min="0" max="15" step="0.1"><span class="unit">% anual, si no hay arriendo informado</span></div></div>
+    </div>
+    <details class="more" style="margin-top:14px"><summary>Más supuestos</summary>
+      <div class="controls">
+        <div class="ctl"><label for="inV">Vacancia</label><div class="row"><input type="number" id="inV" min="0" max="50" step="1"><span class="unit">% del año</span></div></div>
+        <div class="ctl"><label for="inO">Gastos operacionales</label><div class="row"><input type="number" id="inO" min="0" max="60" step="1"><span class="unit">% del arriendo</span></div></div>
+        <div class="ctl"><label for="inA">Reajuste real del arriendo</label><div class="row"><input type="number" id="inA" min="-5" max="5" step="0.1"><span class="unit">% anual</span></div></div>
+        <div class="ctl"><label for="inS">Costo de venta al final</label><div class="row"><input type="number" id="inS" min="0" max="10" step="0.5"><span class="unit">% del valor</span></div></div>
+        <div class="ctl"><label for="inM">Meses sin renta (remodelación)</label><div class="row"><input type="number" id="inM" min="0" max="36" step="1"><span class="unit">Nueva York y Huérfanos</span></div></div>
+        <div class="ctl"><label for="inUF">Valor UF</label><div class="row"><input type="number" id="inUF" min="1" step="1" style="width:100px"><span class="unit">CLP (planilla: 1 sep)</span></div></div>
+        <div class="ctl"><label for="inRec">Recoleta (4 deptos, en compra)</label><div class="row"><select id="inRec" style="width:auto"><option value="1">Incluir</option><option value="0">Excluir</option></select></div></div>
+      </div>
+    </details>
+  </section>
+
+  <section aria-label="Estado actual" style="display:grid;gap:10px">
+    <div class="panel-head" style="margin:0"><h2>Estado actual</h2><span class="muted small" id="stateNote"></span></div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section aria-label="Resultado" style="display:grid;gap:10px">
+    <div class="panel-head" style="margin:0"><h2 id="resTitle">Resultado proyectado</h2><span class="muted small">Cambia con el horizonte y la plusvalía elegidos arriba</span></div>
+    <div class="kpis" id="res"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="panel">
+      <div class="panel-head"><h2>Valor, deuda y patrimonio</h2><span class="muted small">UF al cierre de cada año</span></div>
+      <div class="legend"><span><i style="background:var(--s-value)"></i>Valor de las propiedades</span><span><i style="background:var(--s-debt)"></i>Deuda hipotecaria</span><span><i style="background:var(--s-equity)"></i>Patrimonio neto</span></div>
+      <div class="chartbox"><canvas id="c1" aria-label="Valor, deuda y patrimonio por año" role="img"></canvas></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Flujo de caja anual</h2><span class="muted small">Renta neta menos dividendos</span></div>
+      <div class="legend"><span><i style="background:var(--s-noi)"></i>Renta neta (NOI)</span><span><i style="background:var(--s-debt)"></i>Dividendos</span><span><i style="background:var(--s-equity)"></i>Flujo neto</span></div>
+      <div class="chartbox"><canvas id="c2" aria-label="Flujo de caja anual" role="img"></canvas></div>
+    </section>
+  </div>
+
+  <div class="split">
+    <section class="panel">
+      <div class="panel-head"><h2>Valor del área por escenario</h2><span class="muted small">VPN de flujos + patrimonio final descontado, UF. Clic para elegir.</span></div>
+      <div class="tscroll"><table class="matrix" id="matrix"></table></div>
+      <p class="muted small" style="margin:10px 0 0">Las otras variables quedan fijas en los supuestos de arriba.</p>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>Cómo se calcula</h2></div>
+      <ul class="notes">
+        <li>Valor de cada propiedad = tasación × (1 + plusvalía)<sup>año</sup>.</li>
+        <li>Renta neta = arriendo × 12 × (1 − vacancia) × (1 − gastos). Se usa el arriendo que trae la tasación cuando existe; si no, la renta bruta estimada sobre tasación.</li>
+        <li>Dividendos y saldos salen de las tablas de desarrollo de cada crédito (Itaú, Banco de Chile, BancoEstado, Santander).</li>
+        <li>Valor del área = flujos netos descontados + (valor final × (1 − costo de venta) − saldo de deuda) descontado.</li>
+        <li>TIR y múltiplo se miden sobre el patrimonio actual a valor de tasación.</li>
+      </ul>
+    </section>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Pendientes para pasar de mockup a versión final</h2></div>
+    <ul class="notes">
+      <li><strong>Precios de compra:</strong> faltan todos. Mientras tanto, la plusvalía se mide contra el valor libro del balance.</li>
+      <li><strong>Arriendos reales:</strong> 7 propiedades usan el arriendo que estima su tasación. Ñuñoa, Renca, Europa y Nueva York usan la renta supuesta sobre tasación.</li>
+      <li><strong>Criterio de valor:</strong> se usa el valor comercial del tasador y, si un activo tiene más de una tasación, la mayor. Moneda tiene tres: Itaú tasador 9.800 UF (jul 2025, la que se usa), Itaú visado 7.840 UF y BancoEstado 6.509 UF (sep 2025).</li>
+      <li><strong>Nueva York y Huérfanos:</strong> su valor es una estimación online de Propiteq, no una tasación bancaria.</li>
+      <li><strong>La Portada:</strong> el informe judicial (nov 2024) da $685,5 MM; convertido con la UF de esa fecha ($37.980) son 18.050 UF.</li>
+      <li><strong>Recoleta (Edificio Ilumina):</strong> 4 tasaciones de Banco de Chile del 4 sep 2026. El valor del tasador suma 18.200 UF (el valor banco, 15.268 UF); el dashboard usa el del tasador. Arriendo estimado 57,9 UF/mes en total. Está incluida aunque sigue en compra: el 10% pagado se refleja como patrimonio y se supone un crédito de $360 MM al 4,5% a 20 años hasta tener el monto real.</li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Propiedades</h2><span class="muted small">Clic en un encabezado para ordenar (mayor a menor, menor a mayor, original). Las celdas con borde se pueden editar.</span></div>
+    <div class="tscroll"><table id="props"></table></div>
+    <p class="muted small" style="margin:10px 0 0">Valor comercial: el mayor entre las tasaciones del activo, y es el que usa la proyección. Valor banco: el visado para garantía; si hay un solo valor, es igual al comercial. Valor libro: columna "A que valor?" de la planilla, convertido a UF. Se usa como referencia de costo hasta tener los precios de compra.</p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head"><h2>Proyección año a año</h2><span class="muted small">UF</span></div>
+    <div class="tscroll"><table id="yearly"></table></div>
+  </section>
+</div>
+
+<script>
+const CRED={"2":{"b":"Itaú","saldo":3226.9,"div":32.1,"fin":"04/2037","pago":[385.2,385.2,385.2,385.2,385.2,385.2,385.2,385.2,385.2,385.2,223.9],"amort":[243.2,254.1,265.9,278.3,291.3,304.5,319.4,334.1,349.7,365.9,220.5]},"3":{"b":"Itaú","saldo":9324.9,"div":87.75,"fin":"12/2037","pago":[1053.0,1053.0,1053.0,1053.0,1053.0,1053.0,1053.0,1053.0,1053.0,1053.0,1053.0,263.1],"amort":[656.0,683.4,715.2,744.9,782.0,816.8,852.8,891.2,931.3,972.7,1017.3,261.2]},"4":{"b":"Banco de Chile","saldo":4786.3,"div":46.72,"fin":"01/2038","pago":[560.6,560.3,560.1,559.9,559.7,559.5,559.2,559.0,558.7,558.4,558.1,186.0],"amort":[333.0,348.0,363.7,380.0,397.1,415.0,433.6,453.2,473.6,494.9,517.1,177.2]},"5":{"b":"Banco de Chile","saldo":11276.1,"div":99.91,"fin":"12/2039","pago":[1198.6,1198.0,1197.4,1196.7,1196.0,1195.3,1194.5,1193.7,1192.9,1192.0,1191.1,1190.1,1189.1,299.4],"amort":[622.7,653.5,685.8,719.7,755.2,792.5,831.7,872.7,915.9,961.1,1008.5,1058.4,1110.7,287.7]},"6":{"b":"BancoEstado","saldo":3120.7,"div":34.58,"fin":"08/2035","pago":[415.0,415.0,415.0,415.0,415.0,415.0,415.0,415.0,380.4],"amort":[298.5,310.4,322.7,335.5,348.8,362.7,377.1,392.0,373.0]},"9":{"b":"Santander","saldo":3927.0,"div":36.79,"fin":"06/2038","pago":[441.5,441.5,441.5,441.5,441.5,441.5,441.5,441.5,441.5,441.5,441.5,331.1],"amort":[252.9,265.2,278.2,293.7,308.4,323.3,340.0,357.2,375.0,394.5,414.2,324.4]}};
+// Fuente: planilla "Detalle propiedades Kaiken", pestaña Detalle Propiedades. Valor libro en CLP.
+const PROPS=[
+ {n:11,name:'Locales comerciales La Portada',comuna:'Independencia',tipo:'Locales',m2:518,ten:'Múltiples',st:'Arrendada',tas:18050,tasBy:'Perito judicial ($685,5 MM a UF nov 2024)',tf:'nov 2024',r0:118.6,rs:'renta neta capitalizada en tasación',book:365000000,cred:null},
+ {n:5,name:'Terrazas 401, Av. del Parque 5275',comuna:'Huechuraba',tipo:'Oficina',m2:283,ten:'Importadora Hevia SpA',st:'Arrendada',tas:16635,tasBy:'CGDV para Banco de Chile',tf:'may 2024',r0:77.5,rs:'arriendo en tasación ($2,9 MM)',book:564352867+66349850,cred:'5'},
+ {n:3,name:'Terrazas 202, Of. 202',comuna:'Huechuraba',tipo:'Oficina',m2:275,ten:'Corporación Vial S.A.',st:'Arrendada',tas:14100,tasBy:'N. Latorre para Itaú',tf:'jun 2025',r0:85,rs:'renta estimada en tasación',book:498722783+53456717,cred:'3'},
+ {n:9,name:'Oficina Nueva York 25, piso 3',comuna:'Santiago',tipo:'Oficina',m2:311,ten:'Remodelando (recibida 15/07)',st:'Remodelación',tas:8225,tasBy:'Propiteq (estimación online)',tf:'ene 2026',book:null,cred:'9'},
+ {n:7,name:'Ñuñoa, Los Talaveras 120 (dpto 405)',comuna:'Ñuñoa',tipo:'Departamento',m2:99,ten:'Sin informar',st:'Sin informar',tas:8030,tasBy:'BancoEstado ($328 MM)',tf:'ago 2026',book:220500000,cred:null},
+ {n:1,name:'Moneda 812, Of. 705',comuna:'Santiago',tipo:'Oficina',m2:297,ten:'Vision Optics Chile SpA',st:'Arrendada',tas:9800,bank:7840,tasBy:'N. Latorre para Itaú (TMA251378)',tf:'jul 2025',r0:54,rs:'renta estimada en tasación Itaú',warn:'Hay 3 valores: Itaú tasador 9.800 UF (el que se usa, el mayor), Itaú visado 7.840 UF y BancoEstado 6.509 UF.',book:384252660,cred:null},
+ {n:10,name:'Huérfanos 1294, Of. 51',comuna:'Santiago',tipo:'Oficina',m2:null,ten:'Remodelando (recibida junio)',st:'Remodelación',tas:7657,tasBy:'Propiteq (estimación online)',tf:'jul 2026',r0:46.7,rs:'estimación Propiteq',book:124585059,cred:null},
+ {n:4,name:'Work Center Miraflores 42, Renca',comuna:'Renca',tipo:'Bodega/Oficina',m2:null,ten:'Medio Mundo SpA',st:'Arrendada',tas:7545,tasBy:'Banco de Chile (correo)',tf:'nov 2025',book:299747458,cred:'4'},
+ {n:6,name:'Europa 401, Av. del Parque 4680',comuna:'Huechuraba',tipo:'Oficina',m2:126,ten:'Mendes Holler Ingeniería SpA',st:'Arrendada',tas:5367,tasBy:'BancoEstado',tf:'may 2023',book:164000000,cred:'6'},
+ {n:2,name:'Patio Mayor, Av. del Parque 4980 Of. 331',comuna:'Huechuraba',tipo:'Oficina',m2:null,ten:'Más a Más SpA',st:'Arrendada',tas:4440,tasBy:'N. Latorre para Itaú',tf:'dic 2024',r0:32,rs:'arriendo en tasación ($1,23 MM)',book:170384300,cred:'2'},
+ {n:8,name:'Recoleta, Edificio Ilumina (deptos 25, 27, 85, 105)',comuna:'Recoleta',tipo:'Departamentos',m2:255,ten:'En compra (10% pagado), nuevos sin uso',st:'En compra',tas:18200,bank:15268,tasBy:'Roberto Nieto para Banco de Chile',tf:'sep 2026',r0:57.85,rs:'renta estimada en las 4 tasaciones',book:null,cred:'rec',rec:true}
+];
+const DEF={H:12,G:2,R:8,Y:6.5,V:5,O:12,A:0,S:2,M:6,UF:40875,Rec:1};
+let P={...DEF}; const rentOverride={}, tasOverride={}, buyOverride={};
+try{const s=JSON.parse(localStorage.getItem('kaiken-inmo-v4')||'null'); if(s){Object.assign(P,s.P||{});Object.assign(rentOverride,s.rent||{});Object.assign(tasOverride,s.tas||{});Object.assign(buyOverride,s.buy||{});}}catch(e){}
+function save(){try{localStorage.setItem('kaiken-inmo-v4',JSON.stringify({P,rent:rentOverride,tas:tasOverride,buy:buyOverride}))}catch(e){}}
+
+// Recoleta: 90% restante financiado con crédito ~360 MM CLP, supuesto 4,5% a 20 años
+function recCredit(){const L=360000000/P.UF, r=0.045/12, n=240, c=L*r/(1-Math.pow(1+r,-n));let s=L;const pago=[],amort=[];
+ for(let y=0;y<20;y++){let a=0;for(let m=0;m<12;m++){const i=s*r;a+=c-i;s-=c-i}pago.push(c*12);amort.push(a)}return{b:'Supuesto',saldo:L,div:c,fin:'—',pago,amort}}
+function credOf(p){return p.cred==='rec'?recCredit():(p.cred?CRED[p.cred]:null)}
+const active=()=>PROPS.filter(p=>!p.rec||P.Rec==1);
+const tasOf=p=>tasOverride[p.n]??p.tas;
+function rentOf(p){const o=rentOverride[p.n];if(o!=null&&o!=='')return{v:+o,est:false,src:'ingresado'};if(p.r0)return{v:p.r0,est:false,src:p.rs};return{v:tasOf(p)*P.Y/100/12,est:true,src:'estimado '+P.Y+'% sobre tasación'}}
+
+function project(H,g){
+  const years=[];let equity0=0,value0=0,debt0=0;
+  const props=active();
+  props.forEach(p=>{const c=credOf(p);value0+=tasOf(p);debt0+=c?c.saldo:0});
+  equity0=value0-debt0;
+  for(let t=1;t<=H;t++){
+    let val=0,debt=0,noi=0,ds=0,gross=0;
+    props.forEach(p=>{
+      const c=credOf(p);
+      val+=tasOf(p)*Math.pow(1+g/100,t);
+      let s=c?c.saldo:0,pay=0;
+      if(c){for(let k=0;k<t;k++)s-=(c.amort[k]||0);pay=c.pago[t-1]||0}
+      debt+=Math.max(0,s);ds+=pay;
+      let months=12;
+      if(p.st==='Remodelación'){const off=P.M-(t-1)*12;months=Math.max(0,Math.min(12,12-off))}
+      if(p.rec&&t===1)months=6;
+      const r=rentOf(p).v*months*Math.pow(1+P.A/100,t-1);
+      gross+=r;noi+=r*(1-P.V/100)*(1-P.O/100);
+    });
+    years.push({t,val,debt,eq:val-debt,noi,ds,fcf:noi-ds,gross});
+  }
+  const r=P.R/100,last=years[H-1];
+  const term=last.val*(1-P.S/100)-last.debt;
+  let pv=0;years.forEach(y=>pv+=y.fcf/Math.pow(1+r,y.t));
+  const pvTerm=term/Math.pow(1+r,H);
+  const sumF=years.reduce((a,y)=>a+y.fcf,0);
+  const flows=[-equity0,...years.map((y,i)=>y.fcf+(i===H-1?term:0))];
+  return{years,value0,debt0,equity0,term,pv,pvTerm,npv:pv+pvTerm,sumF,total:sumF+term,irr:irr(flows),mult:(sumF+term)/equity0};
+}
+function irr(f){let lo=-0.99,hi=1;const npv=x=>f.reduce((a,v,i)=>a+v/Math.pow(1+x,i),0);if(npv(lo)*npv(hi)>0)return NaN;for(let i=0;i<120;i++){const m=(lo+hi)/2;(npv(lo)*npv(m)<=0)?hi=m:lo=m}return(lo+hi)/2}
+
+const fUF=v=>Math.round(v).toLocaleString('es-CL');
+const fMM=v=>'$'+(v*P.UF/1e6).toLocaleString('es-CL',{maximumFractionDigits:0})+' MM';
+const fP=v=>isNaN(v)?'—':(v*100).toLocaleString('es-CL',{maximumFractionDigits:1})+'%';
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function kpi(label,v,s,cls=''){return `<div class="kpi ${cls}"><span class="eyebrow">${label}</span><span class="v">${v}</span><span class="s">${s}</span></div>`}
+
+function renderState(){
+  const props=active();let val=0,debt=0,div=0,rent=0,est=0,book=0,tasB=0;
+  props.forEach(p=>{const c=credOf(p);val+=tasOf(p);if(c){debt+=c.saldo;div+=c.div}const r=rentOf(p);rent+=r.v;if(r.est)est++;const bk=buyOverride[p.n]??(p.book?p.book/P.UF:0);if(bk){book+=bk;tasB+=tasOf(p)}});
+  const ltv=debt/val, cov=rent*(1-P.V/100)*(1-P.O/100)/div;
+  const ltvChip=ltv<0.5?'<span class="chip good">Holgado</span>':ltv<0.65?'<span class="chip warn">Medio</span>':'<span class="chip crit">Alto</span>';
+  const covChip=cov>=1.25?'<span class="chip good">Cubre</span>':cov>=1?'<span class="chip warn">Justo</span>':'<span class="chip crit">No cubre</span>';
+  document.getElementById('kpis').innerHTML=
+   kpi('Patrimonio neto',fUF(val-debt)+' UF',fMM(val-debt)+' · tasación menos deuda','hero')+
+   kpi('Valor de tasación',fUF(val)+' UF',props.length+' propiedades · '+fMM(val))+
+   kpi('Deuda hipotecaria',fUF(debt)+' UF',Object.keys(CRED).length+(P.Rec==1?1:0)+' créditos vigentes')+
+   kpi('LTV',fP(ltv),ltvChip+' deuda / tasación')+
+   kpi('Dividendos mensuales',fUF(div)+' UF',fMM(div)+' al mes')+
+   kpi('Renta bruta mensual',fUF(rent)+' UF',(est?`<span class="tag-missing">${est} de ${props.length} estimadas</span>`:'Informada'))+
+   kpi('Cobertura de dividendos',(cov).toLocaleString('es-CL',{maximumFractionDigits:2})+'x',covChip+' renta neta / dividendos')+
+   kpi('Plusvalía sobre valor libro',fUF(tasB-book)+' UF',fP((tasB-book)/book)+' · propiedades con valor libro');
+  document.getElementById('stateNote').textContent='Tasaciones y saldos de crédito al 1 oct 2026';
+}
+
+function renderResult(pr){
+  document.getElementById('resTitle').textContent=`Resultado a ${P.H} años con plusvalía de ${P.G.toLocaleString('es-CL')}%`;
+  const last=pr.years[P.H-1];
+  document.getElementById('res').innerHTML=
+   kpi('Valor del área hoy',fUF(pr.npv)+' UF',fMM(pr.npv)+` · VPN al ${P.R}%`,'hero')+
+   kpi('Patrimonio al final',fUF(last.eq)+' UF',`valor ${fUF(last.val)} − deuda ${fUF(last.debt)}`)+
+   kpi('Flujo neto acumulado',fUF(pr.sumF)+' UF',`suma de ${P.H} años, sin descontar`)+
+   kpi('Resultado total',fUF(pr.total)+' UF','flujos + patrimonio final neto de venta')+
+   kpi('TIR del patrimonio',fP(pr.irr),'real, en UF')+
+   kpi('Múltiplo',(pr.mult).toLocaleString('es-CL',{maximumFractionDigits:2})+'x','resultado total / patrimonio hoy');
+}
+
+let ch1,ch2;
+function renderCharts(pr){
+  const labels=pr.years.map(y=>String(2026+y.t));
+  const grid=css('--line'),tick=css('--fg-3'),fg=css('--fg');
+  Chart.defaults.font.family=css('--f-body');Chart.defaults.color=tick;
+  const tip={backgroundColor:css('--surface'),titleColor:fg,bodyColor:css('--fg-2'),borderColor:grid,borderWidth:1,padding:10,
+    callbacks:{label:c=>` ${c.dataset.label}: ${fUF(c.parsed.y)} UF`}};
+  const scales={x:{grid:{display:false},ticks:{color:tick}},y:{grid:{color:grid},border:{display:false},ticks:{color:tick,callback:v=>fUF(v)}}};
+  const d1=[{label:'Valor',data:pr.years.map(y=>y.val),borderColor:css('--s-value'),backgroundColor:css('--s-value'),borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.25},
+            {label:'Deuda',data:pr.years.map(y=>y.debt),borderColor:css('--s-debt'),backgroundColor:css('--s-debt'),borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.25},
+            {label:'Patrimonio',data:pr.years.map(y=>y.eq),borderColor:css('--s-equity'),backgroundColor:css('--s-equity')+'22',fill:'origin',borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.25}];
+  const d2=[{type:'bar',label:'Renta neta',data:pr.years.map(y=>y.noi),backgroundColor:css('--s-noi'),borderRadius:4,borderSkipped:'start',stack:'s'},
+            {type:'bar',label:'Dividendos',data:pr.years.map(y=>-y.ds),backgroundColor:css('--s-debt'),borderRadius:4,borderSkipped:'start',stack:'s'},
+            {type:'line',order:-1,label:'Flujo neto',data:pr.years.map(y=>y.fcf),borderColor:css('--s-equity'),backgroundColor:css('--s-equity'),borderWidth:2,pointRadius:3,pointBackgroundColor:css('--s-equity'),pointBorderColor:css('--surface'),pointBorderWidth:2,tension:.2}];
+  const opts={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:tip},scales};
+  if(ch1){ch1.destroy();ch2.destroy()}
+  ch1=new Chart(document.getElementById('c1'),{type:'line',data:{labels,datasets:d1},options:opts});
+  ch2=new Chart(document.getElementById('c2'),{data:{labels,datasets:d2},options:{...opts,scales:{...scales,x:{...scales.x,stacked:true},y:{...scales.y,stacked:true}}}});
+}
+
+function renderMatrix(){
+  const Hs=[10,12,15],Gs=[1,2,3];
+  let h='<thead><tr><th class="l">Plusvalía \\ Horizonte</th>'+Hs.map(x=>`<th>${x} años</th>`).join('')+'</tr></thead><tbody>';
+  Gs.forEach(g=>{h+=`<tr><th class="l">${g}% anual</th>`+Hs.map(H=>{const r=project(H,g);return `<td data-h="${H}" data-g="${g}" class="${H==P.H&&g==P.G?'sel':''}" title="Patrimonio final ${fUF(r.years[H-1].eq)} UF · TIR ${fP(r.irr)}">${fUF(r.npv)}</td>`}).join('')+'</tr>'});
+  h+='</tbody>';
+  const m=document.getElementById('matrix');m.innerHTML=h;
+  m.querySelectorAll('td').forEach(td=>td.onclick=()=>{P.H=+td.dataset.h;P.G=+td.dataset.g;update()});
+}
+
+let SORT={k:null,d:-1};
+const bankOf=p=>p.bank??tasOf(p);
+function renderProps(){
+  const rows=active().map(p=>{const c=credOf(p),r=rentOf(p),tas=tasOf(p),bookUF=buyOverride[p.n]??(p.book?p.book/P.UF:null);
+    return{p,c,r,tas,bank:bankOf(p),bookUF,plus:bookUF?tas/bookUF-1:null,debt:c?c.saldo:null,div:c?c.div:null,yield:r.v*12/tas}});
+  const COLS=[
+    {k:'n',l:'N°',cls:'l',get:x=>x.p.n},
+    {k:'name',l:'Propiedad',cls:'l',get:x=>x.p.name},
+    {k:'st',l:'Estado',cls:'l',get:x=>x.p.st},
+    {k:'tas',l:'Valor comercial UF',get:x=>x.tas,title:'Mayor valor comercial entre las tasaciones del activo. Se usa en la proyección.'},
+    {k:'bank',l:'Valor banco UF',get:x=>x.bank,title:'Valor visado o de garantía del banco. Si hay un solo valor, es igual al comercial.'},
+    {k:'src',l:'Fuente',cls:'l',get:x=>x.p.tasBy},
+    {k:'book',l:'Valor libro UF',get:x=>x.bookUF},
+    {k:'plus',l:'Plusvalía',get:x=>x.plus},
+    {k:'debt',l:'Deuda UF',get:x=>x.debt},
+    {k:'div',l:'Dividendo UF/mes',get:x=>x.div},
+    {k:'rent',l:'Arriendo UF/mes',get:x=>x.r.v},
+    {k:'yield',l:'Renta bruta',get:x=>x.yield},
+    {k:'cred',l:'Crédito',cls:'l',get:x=>x.c?x.c.b:''}];
+  if(SORT.k){const col=COLS.find(c=>c.k===SORT.k);rows.sort((a,b)=>{const va=col.get(a),vb=col.get(b);
+    if(va==null&&vb==null)return 0;if(va==null)return 1;if(vb==null)return -1;
+    return (typeof va==='string'?va.localeCompare(vb,'es'):va-vb)*SORT.d})}
+  let h='<thead><tr>'+COLS.map(c=>{const on=SORT.k===c.k;const arrow=on?(SORT.d<0?' ▼':' ▲'):'';
+    return `<th class="${c.cls||''}" aria-sort="${on?(SORT.d<0?'descending':'ascending'):'none'}"${c.title?` title="${c.title}"`:''}><button class="sortbtn" data-k="${c.k}">${c.l}<span class="arr">${arrow}</span></button></th>`}).join('')+'</tr></thead><tbody>';
+  let T={tas:0,bank:0,tasB:0,book:0,debt:0,div:0,rent:0};
+  rows.forEach(x=>{const {p,c,r,tas,bank,bookUF}=x;
+    T.tas+=tas;T.bank+=bank;if(bookUF){T.book+=bookUF;T.tasB+=tas}T.debt+=c?c.saldo:0;T.div+=c?c.div:0;T.rent+=r.v;
+    const stc=p.st==='Arrendada'?'good':p.st==='Remodelación'||p.st==='En compra'?'warn':'crit';
+    h+=`<tr><td class="l num">${p.n}</td><td class="l"><span class="prop-name" title="${p.name}">${p.name}</span><span class="muted small">${p.comuna} · ${p.ten}</span></td>
+    <td class="l"><span class="chip ${stc}">${p.st}</span></td>
+    <td><input type="number" data-k="tas" data-n="${p.n}" value="${Math.round(tas)}" aria-label="Valor comercial ${p.name}"></td>
+    <td class="num">${fUF(bank)}${bank<tas?` <span class="muted small">(${fP(bank/tas-1)})</span>`:''}</td>
+    <td class="l small">${p.tasBy}<br><span class="muted">${p.tf}</span>${p.warn?` <span class="tag-missing" title="${p.warn}">ver</span>`:''}</td>
+    <td class="num">${bookUF?fUF(bookUF):'<span class="tag-missing">falta</span>'}</td>
+    <td class="num">${bookUF?fP(x.plus):'—'}</td>
+    <td class="num">${c?fUF(c.saldo):'—'}</td><td class="num">${c?c.div.toLocaleString('es-CL',{maximumFractionDigits:1}):'—'}</td>
+    <td><input type="number" data-k="rent" data-n="${p.n}" value="${rentOverride[p.n]??''}" placeholder="${r.v.toFixed(1)}" aria-label="Arriendo ${p.name}"></td>
+    <td class="num" title="${r.src}">${fP(x.yield)}${r.est?' <span class="tag-missing">est.</span>':''}</td>
+    <td class="l small muted">${c?c.b+(c.fin!=='—'?' · vence '+c.fin:''):'Sin crédito'}</td></tr>`});
+  h+=`</tbody><tfoot><tr><td></td><td class="l">Total</td><td></td><td class="num">${fUF(T.tas)}</td><td class="num">${fUF(T.bank)}</td><td></td><td class="num">${fUF(T.book)}</td><td class="num">${fP(T.tasB/T.book-1)}</td><td class="num">${fUF(T.debt)}</td><td class="num">${T.div.toLocaleString('es-CL',{maximumFractionDigits:1})}</td><td class="num">${T.rent.toLocaleString('es-CL',{maximumFractionDigits:1})}</td><td class="num">${fP(T.rent*12/T.tas)}</td><td></td></tr></tfoot>`;
+  const t=document.getElementById('props');t.innerHTML=h;
+  t.querySelectorAll('.sortbtn').forEach(b=>b.onclick=()=>{const k=b.dataset.k;
+    if(SORT.k!==k)SORT={k,d:['n','name','st','src','cred'].includes(k)?1:-1};else if((SORT.d===-1)===!['n','name','st','src','cred'].includes(k))SORT.d*=-1;else SORT={k:null,d:-1};
+    renderProps()});
+  t.querySelectorAll('input').forEach(i=>i.onchange=()=>{const n=+i.dataset.n,v=i.value;
+    if(i.dataset.k==='rent'){if(v==='')delete rentOverride[n];else rentOverride[n]=+v}
+    else{const base=PROPS.find(p=>p.n===n).tas;if(v===''||+v===base)delete tasOverride[n];else tasOverride[n]=+v}
+    update()});
+}
+
+function renderYearly(pr){
+  const rows=[['Valor propiedades','val'],['Deuda','debt'],['Patrimonio','eq'],['Renta bruta','gross'],['Renta neta','noi'],['Dividendos','ds'],['Flujo neto','fcf']];
+  let h='<thead><tr><th class="l">Concepto</th>'+pr.years.map(y=>`<th>${2026+y.t}</th>`).join('')+'</tr></thead><tbody>';
+  rows.forEach(([l,k])=>{h+=`<tr><td class="l">${l}</td>`+pr.years.map(y=>`<td class="num">${fUF(k==='ds'?-y[k]:y[k])}</td>`).join('')+'</tr>'});
+  document.getElementById('yearly').innerHTML=h+'</tbody>';
+}
+
+function syncControls(){
+  document.querySelectorAll('#segH button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===P.H));
+  document.querySelectorAll('#segG button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===P.G));
+  const map={inH:'H',inG:'G',inR:'R',inY:'Y',inV:'V',inO:'O',inA:'A',inS:'S',inM:'M',inUF:'UF',inRec:'Rec'};
+  for(const id in map){const el=document.getElementById(id);if(document.activeElement!==el)el.value=P[map[id]]}
+}
+function update(){syncControls();const pr=project(P.H,P.G);renderState();renderResult(pr);try{renderCharts(pr)}catch(e){console.warn('Gráficos no disponibles',e)}renderMatrix();renderProps();renderYearly(pr);save()}
+
+document.querySelectorAll('#segH button').forEach(b=>b.onclick=()=>{P.H=+b.dataset.v;update()});
+document.querySelectorAll('#segG button').forEach(b=>b.onclick=()=>{P.G=+b.dataset.v;update()});
+[['inH','H',1,30],['inG','G',-5,10],['inR','R',0,25],['inY','Y',0,15],['inV','V',0,50],['inO','O',0,60],['inA','A',-5,5],['inS','S',0,10],['inM','M',0,36],['inUF','UF',1,1e6],['inRec','Rec',0,1]].forEach(([id,k,lo,hi])=>{
+  const el=document.getElementById(id);el.addEventListener('change',()=>{let v=parseFloat(el.value);if(isNaN(v))v=DEF[k];v=Math.min(hi,Math.max(lo,v));if(k==='H')v=Math.round(v);P[k]=v;update()})});
+const rerender=()=>{try{renderCharts(project(P.H,P.G))}catch(e){}};
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rerender)}catch(e){}
+new MutationObserver(rerender).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+update();
+</script>
