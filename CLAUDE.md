@@ -6,7 +6,7 @@ Dashboard de estado y proyección del área inmobiliaria de Kaiken (sociedad Imp
 
 - `dashboard/index.html`: fuente del dashboard. Publicado como artifact en https://claude.ai/artifact/PUUrGKBHiGBSbwPUK7sE5W (republicar sobre esa URL, no crear uno nuevo).
 - `data/creditos.json`: calendario anual de dividendos y amortización de cada crédito, desde oct 2026 (año 1 = oct 2026 a sep 2027).
-- `data/registro_propiedades.csv`: registro pre-llenado de las 11 propiedades (misma estructura que el Sheet de Drive).
+- `data/registro_propiedades_v2.xlsx`: registro de propiedades v2 (el que se subió a Drive). Se genera con `scripts/build_registro_v2.py`.
 - `scripts/parse_creditos.py`: parser de las pestañas de crédito del Sheet "Detalle propiedades Kaiken".
 
 ### Google Drive
@@ -14,7 +14,9 @@ Dashboard de estado y proyección del área inmobiliaria de Kaiken (sociedad Imp
 - Carpeta del área: `Kaiken - Área Inmobiliaria` (id `1kzy7SUykoKnS6HmL1EQKu2RCt_BABYRR`).
 - Subcarpeta `Tasaciones` (id `1-jZyaVEl3PbzgVZexLhEl4UGh5R2oOw6`): PDFs de tasación.
 - Sheet fuente del usuario: "Detalle propiedades Kaiken" (id `1ZR8nS2xPH-HojJ_BuwJgkegkpm8lSKQlBtJhOo99eb4`). Ignorar la pestaña "Detalle Arriendo La Portada".
-- Registro pre-llenado: "Kaiken - Registro de propiedades (pre-llenado)" (id `1kKxUN4E_M8MisCy3Oaq5ifPBeztmOaeLjDRDjHDtLgE`). El registro vacío original (id `1qCx9htpnIu7g-rl1xTP1soHZY5UPYuTPYm11iaVg3xU`) quedó sin usar.
+- Subcarpeta `Créditos` (id `1C3mrVrepiUF_qCoEYiLalBSDnW34RXxi`): tablas de desarrollo y documentos de crédito.
+- Subcarpeta `Contratos de arriendo` (id `1zTqHt0DKwjYC1884BOZPYSDnvkX7H_1R`): contratos de arriendo.
+- **Registro vigente:** "Kaiken - Registro de propiedades v2" (id `1ezX6xGVffS_LXbUzxv2EWGWZQMaUVqDuckcXTJhtxVs`). Reemplaza a "Kaiken - Registro de propiedades (pre-llenado)" (id `1kKxUN4E_M8MisCy3Oaq5ifPBeztmOaeLjDRDjHDtLgE`) y al registro vacío original (id `1qCx9htpnIu7g-rl1xTP1soHZY5UPYuTPYm11iaVg3xU`), que quedaron obsoletos.
 - No hay conector de Google Sheets en la organización: Drive puede crear archivos pero no editar uno existente.
 
 ## Criterios acordados con el usuario
@@ -24,6 +26,11 @@ Dashboard de estado y proyección del área inmobiliaria de Kaiken (sociedad Imp
 3. **Recoleta** (4 deptos Edificio Ilumina) va **incluida** por defecto, aunque sigue en compra.
 4. Montos en UF reales. UF de referencia: 40.875 CLP (planilla, 1 sep 2026).
 5. Tabla de propiedades ordenable por cualquier columna.
+6. **Registro de propiedades v2 (decisiones del usuario):**
+   - Sin columnas Origen, Precio de compra, Costos de adquisición, Reparaciones iniciales: solo "Costo total (UF)".
+   - Sin Seguros, Mantención ni Administración (los seguros van dentro del dividendo del crédito).
+   - "Tipo de financiamiento" con lista de validación: Leaseback / Compra con banco. "Capital propio aportado" solo se acepta si es Compra con banco (validación personalizada; gris si no aplica, amarillo si falta).
+   - "Saldo insoluto hoy" se calcula solo con TODAY(), por fórmula de anuidad sobre monto, tasa, plazo y fecha del primer dividendo. Difiere 0,5% o menos de las tablas de los bancos. Terrazas 401 usa 12.296,05 UF (capital con 4 meses de gracia capitalizados).
 
 ## Propiedades (valor comercial / banco en UF)
 
