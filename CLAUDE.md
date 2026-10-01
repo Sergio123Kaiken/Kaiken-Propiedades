@@ -41,7 +41,7 @@ Dashboard de estado y proyección del área inmobiliaria de Kaiken (sociedad Imp
 | 3 | Terrazas 202, Huechuraba | 14.100 | 14.100 | N. Latorre / Itaú jun 2025 | Itaú 9.761,98 UF, 12 años |
 | 9 | Nueva York 25 piso 3, Santiago | 8.225 | 8.225 | Propiteq online ene 2026 | Santander 3.990 UF, 12 años |
 | 7 | Ñuñoa, Los Talaveras 120 | 8.030 | 8.030 | BancoEstado ago 2026 | Sin crédito |
-| 1 | Moneda 812 Of. 705, Santiago | 9.800 | 7.840 | Itaú TMA251378 jul 2025 (también BancoEstado 6.509) | Sin crédito |
+| 1 | Moneda 812 Of. 705, Santiago | 9.800 | 7.840 | Itaú TMA251378 jul 2025 (también BancoEstado 6.509) | Crédito en cuotas 6.166,24 UF, 4,32% (4,41% efectiva), 96 cuotas de 76,34 UF desde 5 oct 2026; banco por confirmar |
 | 10 | Huérfanos 1294 Of. 51, Santiago | 7.657 | 7.657 | Propiteq online jul 2026 | Sin crédito |
 | 4 | Work Center Miraflores, Renca | 7.545 | 7.545 | Banco de Chile (correo) nov 2025 | Banco de Chile 5.000 UF, 4,5%, 12 años |
 | 6 | Europa 401, Huechuraba | 5.367 | 5.367 | BancoEstado may 2023 | BancoEstado 3.971,25 UF, 3,97%, 12 años |
@@ -58,9 +58,11 @@ Arriendos tomados de las tasaciones (UF/mes, estimaciones del tasador, no contra
 - Valor del área = VPN de flujos netos + (valor final × (1 − 2% costo de venta) − saldo de deuda), descontado al 8% real.
 - TIR y múltiplo sobre el patrimonio actual a valor de tasación.
 - Plusvalía histórica: contra el valor libro del balance (columna "A que valor?"), hasta tener precios de compra. Recoleta se excluye de esa comparación (su valor libro es solo el pie de 10%).
-- El estado del navegador se guarda en localStorage con la clave `kaiken-inmo-v4`. Subir la versión cuando cambien los valores por defecto.
+- El estado del navegador se guarda en localStorage con la clave `kaiken-inmo-v5`. Subir la versión cuando cambien los valores por defecto.
 
 ## Pendientes
+
+- Crédito de Moneda: confirmar banco y destino de los fondos (el dashboard suma la deuda pero no la caja recibida). Agregarlo a mano en el registro v2 (no editable desde aquí).
 
 - Precios de compra y costos de adquisición de todas las propiedades.
 - Arriendos reales y contratos (hoy 4 estimados: Ñuñoa, Renca, Europa, Nueva York).
