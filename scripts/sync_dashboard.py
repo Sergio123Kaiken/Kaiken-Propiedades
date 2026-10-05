@@ -17,10 +17,11 @@ today = dt.date.today().strftime("%d-%m-%Y")
 s = open(html, encoding="utf-8").read()
 m = re.search(r"/\*REG_START\*/(.*?)/\*REG_END\*/", s, re.S)
 old = json.loads(m.group(1) or "{}")
-if old.get("header") == header and old.get("rows") == rows and old.get("asof") == today:
-    print("Sin cambios"); sys.exit(3)
 changed_data = old.get("header") != header or old.get("rows") != rows
+same_month = (old.get("asof") or "")[3:] == today[3:]
+if not changed_data and same_month:
+    print("Sin cambios"); sys.exit(3)
 reg = {"asof": today, "synced": dt.datetime.now().strftime("%d-%m-%Y %H:%M"), "header": header, "rows": rows}
 s = s[:m.start(1)] + json.dumps(reg, ensure_ascii=False, separators=(",", ":")) + s[m.end(1):]
 open(html, "w", encoding="utf-8").write(s)
-print("Datos del registro cambiaron" if changed_data else "Solo cambió la fecha", len(rows), "filas")
+print("Datos del registro cambiaron" if changed_data else "Mes nuevo: se actualizan saldos", len(rows), "filas")

@@ -64,10 +64,13 @@ Arriendos: los del Registro v2 (desde el 5 oct 2026). Referencia de las tasacion
 - Panel "Datos que faltan en el registro": se calcula solo. **Al terminar cada tarea, pedirle al usuario los datos que falten** (lista de ese panel).
 - localStorage: clave `kaiken-inmo-v6`. Subir la versión cuando cambien los valores por defecto.
 
+## Sincronización diaria
+
+Rutina `trig_01Me84kUADGUDrJMLryzf4Sm` ("Kaiken: sincronizar dashboard inmobiliario"), todos los días 7:52 hora de Chile, dispara en esta sesión: lee el Registro v2, corre `scripts/sync_dashboard.py` y, si cambió algo, republica el artifact, hace commit y avisa qué cambió y qué datos faltan. Se pausa o borra con las herramientas de rutinas (update_trigger / delete_trigger).
+
 ## Pendientes
 
 - Crédito de Moneda (Itaú, ya en el registro v2): confirmar destino de los fondos (el dashboard suma la deuda pero no la caja recibida).
-- Sincronización diaria registro → dashboard: rutina programada (ver abajo).
 
 - Precios de compra y costos de adquisición de todas las propiedades.
 - Monto y tasa real del crédito de Recoleta.
