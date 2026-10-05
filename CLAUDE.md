@@ -48,25 +48,28 @@ Dashboard de estado y proyección del área inmobiliaria de Kaiken (sociedad Imp
 | 2 | Patio Mayor 331, Huechuraba | 4.440 | 4.440 | N. Latorre / Itaú dic 2024 | Itaú 3.552 UF, 12 años |
 | 8 | Recoleta, Edificio Ilumina (deptos 25, 27, 85, 105) | 18.200 | 15.268 | Roberto Nieto / Banco de Chile sep 2026 | Supuesto: $360 MM, 4,5%, 20 años |
 
-Arriendos tomados de las tasaciones (UF/mes, estimaciones del tasador, no contratos): La Portada 118,6 (renta neta), Terrazas 401 77,5, Terrazas 202 85, Moneda 54, Huérfanos 46,7, Patio Mayor 32, Recoleta 57,85. El resto usa una renta supuesta de 6,5% anual sobre la tasación.
+Arriendos: los del Registro v2 (desde el 5 oct 2026). Referencia de las tasaciones: Recoleta 57,85 UF/mes estimado, no se usa mientras esté en compra.
 
 ## Modelo del dashboard
 
-- Valor = tasación × (1 + plusvalía)^año.
-- Renta neta = arriendo × 12 × (1 − vacancia 5%) × (1 − gastos 12%). Nueva York y Huérfanos: 6 meses sin renta por remodelación.
-- Dividendos y saldos desde las tablas de desarrollo reales (`data/creditos.json`).
+- **Fuente de datos: Registro v2.** El dashboard trae los datos del registro embebidos entre `/*REG_START*/` y `/*REG_END*/` en `dashboard/index.html`. Para actualizar: leer `Propiedades!A1:AD60` con Google Sheets `get_values`, guardar la respuesta como JSON y correr `python3 scripts/sync_dashboard.py <archivo.json>` (sale 0 si cambió, 3 si no). Luego republicar el artifact y hacer commit. Las filas se buscan por ID (el usuario puede reordenarlas).
+- `META` en el HTML guarda lo que no está en el registro: N°, nombre corto, arrendatario, valor libro (CLP) y alertas.
+- Valor = valor comercial × (1 + plusvalía)^año.
+- **Arriendo:** el del registro. Vacante y En compra = renta 0 hasta que el registro diga Arrendada (decisión del usuario). Si una propiedad Arrendada no tiene arriendo, se estima con % sobre tasación y se marca.
+- **Gastos:** contribuciones siempre (cualquier estado); gastos comunes no recuperables solo si la propiedad NO está arrendada. Vacancia y "otros gastos" quedan en 0% por defecto (ajustables).
+- **Créditos:** monto, tasa, plazo, primer dividendo y dividendo del registro. Saldo por anuidad a la fecha del registro (igual que la planilla); salida de caja = dividendo informado. Recoleta usa un crédito supuesto ($360 MM, 4,5%, 20 años) mientras el registro no tenga el real.
 - Valor del área = VPN de flujos netos + (valor final × (1 − 2% costo de venta) − saldo de deuda), descontado al 8% real.
 - TIR y múltiplo sobre el patrimonio actual a valor de tasación.
-- Plusvalía histórica: contra el valor libro del balance (columna "A que valor?"), hasta tener precios de compra. Recoleta se excluye de esa comparación (su valor libro es solo el pie de 10%).
-- El estado del navegador se guarda en localStorage con la clave `kaiken-inmo-v5`. Subir la versión cuando cambien los valores por defecto.
+- Plusvalía histórica: contra el valor libro del balance hasta tener "Costo total". Recoleta se excluye.
+- Panel "Datos que faltan en el registro": se calcula solo. **Al terminar cada tarea, pedirle al usuario los datos que falten** (lista de ese panel).
+- localStorage: clave `kaiken-inmo-v6`. Subir la versión cuando cambien los valores por defecto.
 
 ## Pendientes
 
 - Crédito de Moneda (Itaú, ya en el registro v2): confirmar destino de los fondos (el dashboard suma la deuda pero no la caja recibida).
-- Sincronizar el dashboard con los arriendos reales del registro v2. Falta definir: renta de Nueva York y Huérfanos mientras estén vacantes, y arriendo de Recoleta.
+- Sincronización diaria registro → dashboard: rutina programada (ver abajo).
 
 - Precios de compra y costos de adquisición de todas las propiedades.
-- Arriendos reales y contratos (hoy 4 estimados: Ñuñoa, Renca, Europa, Nueva York).
 - Monto y tasa real del crédito de Recoleta.
 - Rol de La Portada: PDF dice 288-11, planilla 248-11.
 - Posible error de rol en la tasación del depto 27 de Recoleta (2371-68 aparece también en el depto 85).
