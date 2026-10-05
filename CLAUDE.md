@@ -17,7 +17,7 @@ Dashboard de estado y proyección del área inmobiliaria de Kaiken (sociedad Imp
 - Subcarpeta `Créditos` (id `1C3mrVrepiUF_qCoEYiLalBSDnW34RXxi`): tablas de desarrollo y documentos de crédito.
 - Subcarpeta `Contratos de arriendo` (id `1zTqHt0DKwjYC1884BOZPYSDnvkX7H_1R`): contratos de arriendo.
 - **Registro vigente:** "Kaiken - Registro de propiedades v2" (id `1ezX6xGVffS_LXbUzxv2EWGWZQMaUVqDuckcXTJhtxVs`). Reemplaza a "Kaiken - Registro de propiedades (pre-llenado)" (id `1kKxUN4E_M8MisCy3Oaq5ifPBeztmOaeLjDRDjHDtLgE`) y al registro vacío original (id `1qCx9htpnIu7g-rl1xTP1soHZY5UPYuTPYm11iaVg3xU`), que quedaron obsoletos.
-- No hay conector de Google Sheets en la organización: Drive puede crear archivos pero no editar uno existente.
+- Conector de Google Sheets activo desde el 5 oct 2026: editar el Registro v2 en el mismo archivo (mismo link), no crear copias nuevas. Fuente de datos para el dashboard: el Registro v2 (arriendos, créditos, tipo de financiamiento).
 
 ## Criterios acordados con el usuario
 
@@ -62,7 +62,8 @@ Arriendos tomados de las tasaciones (UF/mes, estimaciones del tasador, no contra
 
 ## Pendientes
 
-- Crédito de Moneda: confirmar banco y destino de los fondos (el dashboard suma la deuda pero no la caja recibida). Agregarlo a mano en el registro v2 (no editable desde aquí).
+- Crédito de Moneda (Itaú, ya en el registro v2): confirmar destino de los fondos (el dashboard suma la deuda pero no la caja recibida).
+- Sincronizar el dashboard con los arriendos reales del registro v2. Falta definir: renta de Nueva York y Huérfanos mientras estén vacantes, y arriendo de Recoleta.
 
 - Precios de compra y costos de adquisición de todas las propiedades.
 - Arriendos reales y contratos (hoy 4 estimados: Ñuñoa, Renca, Europa, Nueva York).
