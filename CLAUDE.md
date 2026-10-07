@@ -61,8 +61,15 @@ Arriendos: los del Registro v2 (desde el 5 oct 2026). Referencia de las tasacion
 - Valor del área = VPN de flujos netos + (valor final × (1 − 2% costo de venta) − saldo de deuda), descontado al 8% real.
 - TIR y múltiplo sobre el patrimonio actual a valor de tasación.
 - Plusvalía histórica: contra el valor libro del balance hasta tener "Costo total". Recoleta se excluye.
+- **Reglas del 7 oct 2026 (usuario):**
+  - Sin "Tipo de financiamiento" = propiedad sin crédito (no es un dato faltante).
+  - Contratos de arriendo a perpetuidad: no pedir "Fin del contrato"; el usuario avisa por chat cuando haya vacancias.
+  - Sin "Fecha de compra" = todavía en proceso de compra (no es faltante si el estado es En compra).
+  - Plusvalía se mide contra "Costo total (UF)" del registro (valor libro solo si falta).
+  - **Estimaciones:** si falta un dato, usar un modelo estimado y SIEMPRE avisarlo (panel "Estimaciones en uso" del dashboard y en el mensaje al usuario). Hoy: gastos comunes de no arrendadas = m² × 0,06 UF/m² al mes; crédito de Recoleta = costo total − capital propio, 4,5%, 20 años.
+  - Patio Mayor es P12 (antes P02).
 - Panel "Datos que faltan en el registro": se calcula solo. **Al terminar cada tarea, pedirle al usuario los datos que falten** (lista de ese panel).
-- localStorage: clave `kaiken-inmo-v6`. Subir la versión cuando cambien los valores por defecto.
+- localStorage: clave `kaiken-inmo-v7`. Subir la versión cuando cambien los valores por defecto.
 
 ## Sincronización diaria
 

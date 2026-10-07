@@ -119,6 +119,7 @@ th[aria-sort=ascending] .sortbtn,th[aria-sort=descending] .sortbtn{color:var(--a
         <div class="ctl"><label for="inV">Vacancia</label><div class="row"><input type="number" id="inV" min="0" max="50" step="1"><span class="unit">% del año</span></div></div>
         <div class="ctl"><label for="inO">Otros gastos (además de contribuciones y gastos comunes)</label><div class="row"><input type="number" id="inO" min="0" max="60" step="1"><span class="unit">% del arriendo</span></div></div>
         <div class="ctl"><label for="inA">Reajuste real del arriendo</label><div class="row"><input type="number" id="inA" min="-5" max="5" step="0.1"><span class="unit">% anual</span></div></div>
+        <div class="ctl"><label for="inGC">Gasto común estimado</label><div class="row"><input type="number" id="inGC" min="0" max="1" step="0.01"><span class="unit">UF/m² al mes, solo no arrendadas sin dato</span></div></div>
         <div class="ctl"><label for="inS">Costo de venta al final</label><div class="row"><input type="number" id="inS" min="0" max="10" step="0.5"><span class="unit">% del valor</span></div></div>
         <div class="ctl"><label for="inUF">Valor UF</label><div class="row"><input type="number" id="inUF" min="1" step="1" style="width:100px"><span class="unit">CLP (planilla: 1 sep)</span></div></div>
         <div class="ctl"><label for="inRec">Recoleta (4 deptos, en compra)</label><div class="row"><select id="inRec" style="width:auto"><option value="1">Incluir</option><option value="0">Excluir</option></select></div></div>
@@ -162,17 +163,22 @@ th[aria-sort=ascending] .sortbtn,th[aria-sort=descending] .sortbtn{color:var(--a
         <li>Arriendo: el del Registro v2. Vacantes y en compra no generan renta hasta que el registro diga Arrendada.</li><li>Renta neta = arriendo × 12 × (1 − vacancia) × (1 − otros gastos) − contribuciones − gastos comunes (estos solo en propiedades no arrendadas).</li>
         <li>Créditos: monto, tasa, plazo, primer dividendo y dividendo del Registro v2. El saldo se calcula a la fecha del registro, igual que en la planilla.</li>
         <li>Valor del área = flujos netos descontados + (valor final × (1 − costo de venta) − saldo de deuda) descontado.</li>
-        <li>TIR y múltiplo se miden sobre el patrimonio actual a valor de tasación.</li>
+        <li>TIR y múltiplo se miden sobre el patrimonio actual a valor de tasación.</li><li>Sin tipo de financiamiento = propiedad sin crédito. Contratos a perpetuidad salvo vacancia informada.</li>
       </ul>
     </section>
   </div>
+
+  <section class="panel" id="estPanel" style="border-color:var(--warn)">
+    <div class="panel-head"><h2>Estimaciones en uso</h2><span class="chip warn">Estimado</span></div>
+    <ul class="notes" id="estList"></ul>
+  </section>
 
   <section class="panel">
     <div class="panel-head"><h2>Datos que faltan en el registro</h2><span class="muted small" id="missCount"></span></div>
     <div class="tscroll"><table id="missing"></table></div>
     <ul class="notes" style="margin-top:12px">
       <li><strong>Crédito de Moneda:</strong> el dashboard suma la deuda (Itaú, 6.166 UF) pero no la caja recibida. Falta saber en qué se usaron los fondos.</li>
-      <li><strong>Crédito de Recoleta:</strong> mientras no esté en el registro se supone $360 MM al 4,5% a 20 años.</li>
+      
       <li><strong>Moneda 812:</strong> tiene 3 tasaciones; se usa la mayor (Itaú tasador 9.800 UF).</li>
       <li><strong>Nueva York y Huérfanos:</strong> su valor es una estimación online de Propiteq, no una tasación bancaria.</li>
       <li><strong>La Portada:</strong> el rol del PDF (288-11) no coincide con el de la planilla (248-11).</li>
@@ -193,7 +199,7 @@ th[aria-sort=ascending] .sortbtn,th[aria-sort=descending] .sortbtn{color:var(--a
 
 <script>
 // Datos del Registro de propiedades v2 (Google Sheets). Este bloque lo reemplaza scripts/sync_dashboard.py.
-const REG=/*REG_START*/{"asof":"07-10-2026","synced":"07-10-2026 10:53","header":["ID","Nombre / dirección","Comuna","Rol SII","Tipo","m² útiles","Fecha de compra","Tipo de financiamiento","Costo total (UF)","Capital propio aportado (UF)","Banco","Monto del crédito (UF)","Tasa anual (%)","Plazo (años)","Fecha primer dividendo","Dividendo mensual (UF)","Saldo insoluto hoy (UF)","Estado","Arriendo mensual (UF)","Inicio del contrato","Fin del contrato","Contribuciones (UF/año)","Gastos comunes no recuperables (UF/año)","Valor comercial (UF)","Valor banco (UF)","Fecha de tasación","Tasador","Archivo PDF tasación","Plusvalía sobre costo (%)","Notas"],"rows":[["P06","Europa 401, Av. del Parque 4680 + estac. 113, 114 + bodega 68","Huechuraba","6061-38, 6061-109, 6061-110, 6061-73","Oficina","126","","Compra con banco","","","BancoEstado","3971.25","3.97","12","30-09-2023","34.58","3123.6","Arrendada","35","01-08-2023","","34","","5367","5367","10-05-2023","BancoEstado","Tasacion Oficial Edificio Europa 401.pdf","","Arrendatario Mendes Holler Ingeniería SpA. Crédito op. 116424450. Valor libro $164.000.000."],["P05","Terrazas 401, Av. del Parque 5275 Of. 401 + 7 estac.","Huechuraba","6047-20, 6047-234, 235, 236, 237, 245, 256, 257","Oficina","283.02","","Leaseback","","","Banco de Chile","12296.05","4.94","15","01-01-2025","99.91","11233.7","Arrendada","67","01-01-2025","","156,7","","16635","16635","28-05-2024","CGDV para Banco de Chile","Tasacion Oficina 401 Terrazas.pdf","","Arrendatario Importadora Hevia SpA. Arriendo según tasación. Crédito op. 899.601 de 12.100 UF; el monto incluye intereses capitalizados de 4 meses de gracia. Valor libro $630.702.717."],["Patio Mayor, Av. del Parque 4980 Of. 331 + estac. 28, 29","","Huechuraba","6055-76, 6055-187, 6055-188, 6055-136","Oficina","111","","Leaseback","","","Itaú","3552","4.58","12","05-05-2025","32.1","3207","Arrendada","29","01-06-2025","","33,3","","4440","4440","26-12-2024","N. Latorre para Itaú","TMA242294 - TASACION OFICINA Patio Mayor (1).pdf","","Arrendatario Más a Más SpA. Arriendo según tasación. Tasa implícita. Valor libro $170.384.300."],["P03","Terrazas 202, Av. del Parque 5275 Of. 202 + 5 estac. + bodega 46","Huechuraba","6047-11, 6047-136 a 140, 6047-298","Oficina","275","","Leaseback","","","Itaú","9761.98","4.48","12","20-01-2026","87.75","9293.2","Arrendada","67","01-01-2026","","153,2","","14100","14100","12-06-2025","N. Latorre para Itaú","Tasacion Itau Terrazas 202 (1).pdf","","Arrendatario Corporación Vial S.A. Arriendo según tasación. Tasa implícita desde la tabla de desarrollo. Valor libro $552.179.500."],["P04","Work Center Miraflores, Av. Ventisquero 2225 Módulo 42 Nave D","Renca","02899-00296","Bodega","215","","Leaseback","","","Banco de Chile","5000","4.5","12","01-02-2026","46.72","4760.2","Arrendada","46","01-12-2025","","41,2","","7545","7545","03-11-2025","Banco de Chile (correo)","Tasacion Work Center Miraflores.pdf","","Arrendatario Medio Mundo SpA. Crédito op. 166.411. Valor libro $299.747.458."],["P09","Oficina Nueva York 25, piso 3","Santiago","00029-00003","Oficina","311","","Compra con banco","","","Santander","3990","4.94","12","08-07-2026","36.79","3928.7","Vacante","","","","95,2","","8225","8225","20-01-2026","Propiteq (estimación online)","Tasacion Oficina Nueva York 25.pdf","","Recibida 15/07, remodelando. Valor es estimación automática. Tasa implícita."],["P01","Moneda 812, Of. 705","Santiago","00025-00291","Oficina","297","","Leaseback","","","Itaú","6166.24","4.32","8","05-10-2026","76.34","6112.4","Arrendada","50","01-02-2026","","75,4","","9800","7840","25-07-2025","N. Latorre para Itaú (TMA251378)","TMA251378 (3).pdf","","Arrendatario Vision Optics Chile SpA. Arriendo según tasación. Otra tasación: BancoEstado sep 2025, 6.509 UF (TASACION Moneda.pdf). Valor libro $384.252.660."],["P11","Locales comerciales La Portada, Antonia López de Bello 934 al 968","Independencia","288-11 (planilla: 248-11)","Local comercial","518","","","","","","","","","","","","Arrendada","100","01-10-2026","","81,7","","18050","18050","07-11-2024","Perito judicial V. Correa (causa Santander C-15903-2023)","Tasacion Centro Comercial La Portada Independencia (1).pdf","","Arriendo = renta neta capitalizada en la tasación, no contrato. Informe judicial $685,5 MM a UF nov 2024. Valor libro $365.000.000."],["P07","Ñuñoa, Los Talaveras 120 depto 405 + estac. 79 + bodega 44","Ñuñoa","3950-678, 3950-768, 3950-834","Departamento","99","","Leaseback","","","BancoEstado","5600","5.14","15","05-11-2026","44.7","5600","Arrendada","30","14-09-2026","","19,3","","8030","8030","05-08-2026","BancoEstado","Tasacion Ñuñoa.pdf","","PDF: $328.000.000. Arrendatario sin informar. Valor libro $220.500.000."],["P08","Recoleta, Edificio Ilumina, Av. Valdivieso 411, deptos 25, 27, 85 y 105","Recoleta","2371-26, 2371-82, 2371-104, 2371-106, 2371-28, 2371-68, 2371-108","Departamento","255.74","","Compra con banco","","","","","","","","","","En compra","","","","-","","18200","15268","04-09-2026","Roberto Nieto para Banco de Chile","TASACION DEPTO 25, 27, 85, 105 (4 archivos)","","10% pagado ($40.129.495), deuda banco aprox. $360 MM por confirmar. Arriendo estimado en tasaciones. Nuevos sin uso, recepción final pendiente."],["P10","Huérfanos 1294, Of. 51","Santiago","00107-00223","Oficina","203","","","","","","","","","","","","Vacante","","","","53","","7657","7657","17-07-2026","Propiteq (estimación online)","Tasacion Oficina Huerfanos.pdf","","Recibida junio, remodelando. Arriendo = estimación Propiteq. Valor libro $124.585.059."]]}/*REG_END*/;
+const REG=/*REG_START*/{"asof":"07-10-2026","synced":"07-10-2026 16:23","header":["ID","Nombre / dirección","Comuna","Rol SII","Tipo","m² útiles","Fecha de compra","Tipo de financiamiento","Costo total (UF)","Capital propio aportado (UF)","Banco","Monto del crédito (UF)","Tasa anual (%)","Plazo (años)","Fecha primer dividendo","Dividendo mensual (UF)","Saldo insoluto hoy (UF)","Estado","Arriendo mensual (UF)","Inicio del contrato","Fin del contrato","Contribuciones (UF/año)","Gastos comunes no recuperables (UF/año)","Valor comercial (UF)","Valor banco (UF)","Fecha de tasación","Tasador","Archivo PDF tasación","Plusvalía sobre costo (%)","Notas"],"rows":[["P09","Oficina Nueva York 25, piso 3","Santiago","00029-00003","Oficina","311","03-07-2026","Compra con banco","5700","1701","Santander","3990","4.94","12","08-07-2026","36.79","3928.7","Vacante","","","","95,2","","8225","8225","20-01-2026","Propiteq (estimación online)","Tasacion Oficina Nueva York 25.pdf","44.3","Recibida 15/07, remodelando. Valor es estimación automática. Tasa implícita."],["P11","Locales comerciales La Portada, Antonia López de Bello 934 al 968","Independencia","288-11 (planilla: 248-11)","Local comercial","518","20-06-2026","","8947","","","","","","","","","Arrendada","100","01-10-2026","","81,7","","18050","18050","07-11-2024","Perito judicial V. Correa (causa Santander C-15903-2023)","Tasacion Centro Comercial La Portada Independencia (1).pdf","101.7","Arriendo = renta neta capitalizada en la tasación, no contrato. Informe judicial $685,5 MM a UF nov 2024. Valor libro $365.000.000."],["P10","Huérfanos 1294, Of. 51","Santiago","00107-00223","Oficina","203","25-04-2026","","3051","","","","","","","","","Vacante","","","","53","","7657","7657","17-07-2026","Propiteq (estimación online)","Tasacion Oficina Huerfanos.pdf","151","Recibida junio, remodelando. Arriendo = estimación Propiteq. Valor libro $124.585.059."],["P07","Ñuñoa, Los Talaveras 120 depto 405 + estac. 79 + bodega 44","Ñuñoa","3950-678, 3950-768, 3950-834","Departamento","99","14-11-2025","Leaseback","5833","","BancoEstado","5600","5.14","15","05-11-2026","44.7","5600","Arrendada","30","14-09-2026","","19,3","","8030","8030","05-08-2026","BancoEstado","Tasacion Ñuñoa.pdf","37.7","PDF: $328.000.000. Arrendatario sin informar. Valor libro $220.500.000."],["P04","Work Center Miraflores, Av. Ventisquero 2225 Módulo 42 Nave D","Renca","02899-00296","Bodega","215","25-07-2025","Leaseback","5545","","Banco de Chile","5000","4.5","12","01-02-2026","46.72","4760.2","Arrendada","46","01-12-2025","","41,2","","7545","7545","03-11-2025","Banco de Chile (correo)","Tasacion Work Center Miraflores.pdf","36.1","Arrendatario Medio Mundo SpA. Crédito op. 166.411. Valor libro $299.747.458."],["P03","Terrazas 202, Av. del Parque 5275 Of. 202 + 5 estac. + bodega 46","Huechuraba","6047-11, 6047-136 a 140, 6047-298","Oficina","275","01-06-2025","Leaseback","8794","","Itaú","9761.98","4.48","12","20-01-2026","87.75","9293.2","Arrendada","67","01-01-2026","","153,2","","14100","14100","12-06-2025","N. Latorre para Itaú","Tasacion Itau Terrazas 202 (1).pdf","60.3","Arrendatario Corporación Vial S.A. Arriendo según tasación. Tasa implícita desde la tabla de desarrollo. Valor libro $552.179.500."],["P01","Moneda 812, Of. 705","Santiago","00025-00291","Oficina","297","24-01-2025","Leaseback","5645","","Itaú","6166.24","4.32","8","05-10-2026","76.34","6112.4","Arrendada","50","01-02-2026","","75,4","","9800","7840","25-07-2025","N. Latorre para Itaú (TMA251378)","TMA251378 (3).pdf","73.6","Arrendatario Vision Optics Chile SpA. Arriendo según tasación. Otra tasación: BancoEstado sep 2025, 6.509 UF (TASACION Moneda.pdf). Valor libro $384.252.660."],["P05","Terrazas 401, Av. del Parque 5275 Of. 401 + 7 estac.","Huechuraba","6047-20, 6047-234, 235, 236, 237, 245, 256, 257","Oficina","283.02","01-01-2024","Leaseback","12140","","Banco de Chile","12296.05","4.94","15","01-01-2025","99.91","11233.7","Arrendada","67","01-01-2025","","156,7","","16635","16635","28-05-2024","CGDV para Banco de Chile","Tasacion Oficina 401 Terrazas.pdf","37","Arrendatario Importadora Hevia SpA. Arriendo según tasación. Crédito op. 899.601 de 12.100 UF; el monto incluye intereses capitalizados de 4 meses de gracia. Valor libro $630.702.717."],["P06","Europa 401, Av. del Parque 4680 + estac. 113, 114 + bodega 68","Huechuraba","6061-38, 6061-109, 6061-110, 6061-73","Oficina","126","14-04-2023","Leaseback","5334","","BancoEstado","3971.25","3.97","12","30-09-2023","34.58","3123.6","Arrendada","35","01-08-2023","","34","","5367","5367","10-05-2023","BancoEstado","Tasacion Oficial Edificio Europa 401.pdf","0.6","Arrendatario Mendes Holler Ingeniería SpA. Crédito op. 116424450. Valor libro $164.000.000."],["P08","Recoleta, Edificio Ilumina, Av. Valdivieso 411, deptos 25, 27, 85 y 105","Recoleta","2371-26, 2371-82, 2371-104, 2371-106, 2371-28, 2371-68, 2371-108","Departamento","255.74","","Compra con banco","10123","1012.3","","","","","","","","En compra","","","","-","","18200","15268","04-09-2026","Roberto Nieto para Banco de Chile","TASACION DEPTO 25, 27, 85, 105 (4 archivos)","79.8","10% pagado ($40.129.495), deuda banco aprox. $360 MM por confirmar. Arriendo estimado en tasaciones. Nuevos sin uso, recepción final pendiente."],["P12","Patio Mayor, Av. del Parque 4980 Of. 331 + estac. 28, 29","Huechuraba","6055-76, 6055-187, 6055-188, 6055-136","Oficina","111","01-06-2024","Leaseback","3889","","Itaú","3552","4.58","12","05-05-2025","32.1","3207","Arrendada","29","01-06-2025","","33,3","","4440","4440","26-12-2024","N. Latorre para Itaú","TMA242294 - TASACION OFICINA Patio Mayor (1).pdf","14.2","Arrendatario Más a Más SpA. Arriendo según tasación. Tasa implícita. Valor libro $170.384.300."]]}/*REG_END*/;
 // Datos que no están en el registro: valor libro del balance (CLP), arrendatario y alertas.
 const META={
  P11:{n:11,name:'Locales comerciales La Portada',ten:'Múltiples locatarios',book:365000000,src:'Perito judicial ($685,5 MM a UF nov 2024)'},
@@ -205,7 +211,7 @@ const META={
  P10:{n:10,name:'Huérfanos 1294, Of. 51',ten:'Vacante, remodelando',book:124585059},
  P04:{n:4,name:'Work Center Miraflores 42, Renca',ten:'Medio Mundo SpA',book:299747458},
  P06:{n:6,name:'Europa 401, Av. del Parque 4680',ten:'Mendes Holler Ingeniería SpA',book:164000000},
- P02:{n:2,name:'Patio Mayor, Av. del Parque 4980 Of. 331',ten:'Más a Más SpA',book:170384300},
+ P12:{n:12,name:'Patio Mayor, Av. del Parque 4980 Of. 331',ten:'Más a Más SpA',book:170384300},
  P08:{n:8,name:'Recoleta, Edificio Ilumina (deptos 25, 27, 85, 105)',ten:'En compra (10% pagado)',book:null,rec:true}
 };
 const num=v=>{if(v==null||v==='')return null;if(String(v).trim()==='-')return 0;const x=parseFloat(String(v).replace(',','.'));return isNaN(x)?null:x};
@@ -224,7 +230,7 @@ function buildCredit(L,tasa,plazo,first,div,banco){
   return{b:banco||'Banco s/i',saldo:bal(k0),div:cuota,fin:String(end.getMonth()+1).padStart(2,'0')+'/'+end.getFullYear(),pago,amort}
 }
 // Recoleta: crédito supuesto de $360 MM al 4,5% a 20 años hasta tener el real en el registro.
-function recCredit(){const L=360000000/P.UF,r=0.045/12,n=240,c=L*r/(1-Math.pow(1+r,-n));let s=L;const pago=[],amort=[];
+function recCredit(Lin){const L=Lin||360000000/P.UF,r=0.045/12,n=240,c=L*r/(1-Math.pow(1+r,-n));let s=L;const pago=[],amort=[];
  for(let y=0;y<20;y++){let a=0;for(let m=0;m<12;m++){const i=s*r;a+=c-i;s-=c-i}pago.push(c*12);amort.push(a)}return{b:'Supuesto ($360 MM, 4,5%, 20 años)',saldo:L,div:c,fin:'—',pago,amort,sup:true}}
 const PROPS=(()=>{
   const H=REG.header||[],idx=h=>H.indexOf(h);const g=(row,h)=>{const i=idx(h);return i<0?'':(row[i]??'')};
@@ -240,7 +246,7 @@ const PROPS=(()=>{
     if(cred&&credSup)cred.b+=' (fecha de inicio supuesta)';
     const tas=num(g(r,'Valor comercial (UF)'))||0;
     return{id,n:m.n??parseInt(id.replace(/\D/g,''),10),name:m.name||g(r,'Nombre / dirección'),comuna:g(r,'Comuna'),tipo:g(r,'Tipo'),
-      ten:m.ten||'',st,fin:g(r,'Tipo de financiamiento'),banco:g(r,'Banco'),tas,bank:num(g(r,'Valor banco (UF)'))??tas,
+      ten:m.ten||'',st,m2:num(g(r,'m² útiles')),fin:g(r,'Tipo de financiamiento'),banco:g(r,'Banco'),tas,bank:num(g(r,'Valor banco (UF)'))??tas,
       tasBy:m.src||g(r,'Tasador'),tf:g(r,'Fecha de tasación'),warn:m.warn,book:m.book??null,rec:!!m.rec,
       cost:num(g(r,'Costo total (UF)')),capital:num(g(r,'Capital propio aportado (UF)')),fcompra:g(r,'Fecha de compra'),
       rent:num(g(r,'Arriendo mensual (UF)')),cini:g(r,'Inicio del contrato'),cfin:g(r,'Fin del contrato'),
@@ -249,13 +255,17 @@ const PROPS=(()=>{
   })})();
 const rented=p=>p.st==='Arrendada';
 // Gastos anuales: contribuciones siempre; gastos comunes solo si la propiedad no está arrendada.
-const opexOf=p=>(p.contrib||0)+(rented(p)?0:(p.gc||0));
-const DEF={H:12,G:2,R:8,Y:6.5,V:0,O:0,A:0,S:2,UF:40875,Rec:1};
+const gcOf=p=>{if(rented(p))return{v:0,est:false};if(p.gc!=null)return{v:p.gc,est:false};return{v:(p.m2||0)*P.GC*12,est:true}};
+const opexOf=p=>(p.contrib||0)+gcOf(p).v;
+const DEF={H:12,G:2,R:8,Y:6.5,V:0,O:0,A:0,S:2,UF:40875,Rec:1,GC:0.06};
 let P={...DEF}; const rentOverride={}, tasOverride={}, buyOverride={};
-try{const s=JSON.parse(localStorage.getItem('kaiken-inmo-v6')||'null'); if(s){Object.assign(P,s.P||{});Object.assign(rentOverride,s.rent||{});Object.assign(tasOverride,s.tas||{});Object.assign(buyOverride,s.buy||{});}}catch(e){}
-function save(){try{localStorage.setItem('kaiken-inmo-v6',JSON.stringify({P,rent:rentOverride,tas:tasOverride,buy:buyOverride}))}catch(e){}}
+try{const s=JSON.parse(localStorage.getItem('kaiken-inmo-v7')||'null'); if(s){Object.assign(P,s.P||{});Object.assign(rentOverride,s.rent||{});Object.assign(tasOverride,s.tas||{});Object.assign(buyOverride,s.buy||{});}}catch(e){}
+function save(){try{localStorage.setItem('kaiken-inmo-v7',JSON.stringify({P,rent:rentOverride,tas:tasOverride,buy:buyOverride}))}catch(e){}}
 
-function credOf(p){return p.credReg||(p.rec?recCredit():null)}
+function credOf(p){if(p.credReg)return p.credReg;if(!p.rec)return null;
+  if(p.cost&&p.capital!=null){const c=recCredit(p.cost-p.capital);c.b='Estimado: costo − capital propio, 4,5%, 20 años';return c}
+  return recCredit()}
+const costOf=p=>buyOverride[p.n]??p.cost??(p.book?p.book/P.UF:null);
 const active=()=>PROPS.filter(p=>!p.rec||P.Rec==1);
 const tasOf=p=>tasOverride[p.n]??p.tas;
 function rentOf(p){const o=rentOverride[p.n];if(o!=null&&o!=='')return{v:+o,est:false,src:'ingresado en el dashboard'};
@@ -300,7 +310,7 @@ function kpi(label,v,s,cls=''){return `<div class="kpi ${cls}"><span class="eyeb
 
 function renderState(){
   const props=active();let val=0,debt=0,div=0,rent=0,est=0,book=0,tasB=0,opex=0,ncred=0,vac=0;
-  props.forEach(p=>{const c=credOf(p);val+=tasOf(p);if(c){debt+=c.saldo;div+=c.div;ncred++}const r=rentOf(p);rent+=r.v;if(r.est)est++;if(!rented(p))vac++;opex+=opexOf(p);const bk=buyOverride[p.n]??(p.book?p.book/P.UF:0);if(bk){book+=bk;tasB+=tasOf(p)}});
+  props.forEach(p=>{const c=credOf(p);val+=tasOf(p);if(c){debt+=c.saldo;div+=c.div;ncred++}const r=rentOf(p);rent+=r.v;if(r.est)est++;if(!rented(p))vac++;opex+=opexOf(p);const bk=costOf(p)||0;if(bk){book+=bk;tasB+=tasOf(p)}});
   const ltv=debt/val, cov=(rent*12*(1-P.V/100)*(1-P.O/100)-opex)/(div*12);
   const ltvChip=ltv<0.5?'<span class="chip good">Holgado</span>':ltv<0.65?'<span class="chip warn">Medio</span>':'<span class="chip crit">Alto</span>';
   const covChip=cov>=1.25?'<span class="chip good">Cubre</span>':cov>=1?'<span class="chip warn">Justo</span>':'<span class="chip crit">No cubre</span>';
@@ -313,7 +323,7 @@ function renderState(){
    kpi('Renta bruta mensual',fUF(rent)+' UF',`${props.length-vac} arrendadas · ${vac} sin renta`+(est?` · <span class="tag-missing">${est} estimadas</span>`:''))+
    kpi('Gastos fijos anuales',fUF(opex)+' UF','contribuciones + gastos comunes de no arrendadas')+
    kpi('Cobertura de dividendos',(cov).toLocaleString('es-CL',{maximumFractionDigits:2})+'x',covChip+' renta neta / dividendos')+
-   kpi('Plusvalía sobre valor libro',fUF(tasB-book)+' UF',fP((tasB-book)/book)+' · propiedades con valor libro');
+   kpi('Plusvalía sobre costo',fUF(tasB-book)+' UF',fP((tasB-book)/book)+' · valor comercial vs costo total');
   document.getElementById('stateNote').textContent='Datos del Registro v2 al '+(REG.asof||'—')+(REG.synced?' · sincronizado '+REG.synced:'');
 }
 
@@ -361,7 +371,7 @@ function renderMatrix(){
 let SORT={k:null,d:-1};
 const bankOf=p=>p.bank??tasOf(p);
 function renderProps(){
-  const rows=active().map(p=>{const c=credOf(p),r=rentOf(p),tas=tasOf(p),bookUF=buyOverride[p.n]??(p.book?p.book/P.UF:null);
+  const rows=active().map(p=>{const c=credOf(p),r=rentOf(p),tas=tasOf(p),bookUF=costOf(p);
     return{p,c,r,tas,bank:bankOf(p),bookUF,plus:bookUF?tas/bookUF-1:null,debt:c?c.saldo:null,div:c?c.div:null,yield:r.v*12/tas}});
   const COLS=[
     {k:'n',l:'N°',cls:'l',get:x=>x.p.n},
@@ -370,7 +380,7 @@ function renderProps(){
     {k:'tas',l:'Valor comercial UF',get:x=>x.tas,title:'Mayor valor comercial entre las tasaciones del activo. Se usa en la proyección.'},
     {k:'bank',l:'Valor banco UF',get:x=>x.bank,title:'Valor visado o de garantía del banco. Si hay un solo valor, es igual al comercial.'},
     {k:'src',l:'Fuente',cls:'l',get:x=>x.p.tasBy},
-    {k:'book',l:'Valor libro UF',get:x=>x.bookUF},
+    {k:'book',l:'Costo total UF',get:x=>x.bookUF,title:'Costo total del Registro v2. Si falta, valor libro del balance.'},
     {k:'plus',l:'Plusvalía',get:x=>x.plus},
     {k:'debt',l:'Deuda UF',get:x=>x.debt},
     {k:'div',l:'Dividendo UF/mes',get:x=>x.div},
@@ -416,23 +426,30 @@ function renderYearly(pr){
 }
 
 
+
+function renderEstimates(){
+  const L=[];
+  active().forEach(p=>{const g=gcOf(p);if(g.est)L.push(`<strong>${p.name}:</strong> gastos comunes estimados en ${fUF(g.v)} UF/año (${p.m2||0} m² × ${P.GC} UF/m² al mes). Reemplazar con el dato real en el registro.`);
+    const c=credOf(p);if(c&&(c.sup||c.b.startsWith('Estimado')||/supuesta/.test(c.b)))L.push(`<strong>${p.name}:</strong> crédito ${c.b.toLowerCase()} (saldo ${fUF(c.saldo)} UF, cuota ${c.div.toLocaleString('es-CL',{maximumFractionDigits:1})} UF/mes).`);
+    const r=rentOf(p);if(r.est)L.push(`<strong>${p.name}:</strong> arriendo ${r.src}.`)});
+  L.push('<strong>Contratos de arriendo:</strong> se suponen a perpetuidad (sin fin de contrato ni vacancia) hasta que se informe una vacancia.');
+  document.getElementById('estList').innerHTML=L.map(x=>'<li>'+x+'</li>').join('');
+}
 function renderMissing(){
   const need=[];
   active().forEach(p=>{const m=[];
     if(p.cost==null)m.push('Costo total');
-    if(!p.fcompra)m.push('Fecha de compra');
-    if(!p.fin)m.push('Tipo de financiamiento');
+    if(!p.fcompra&&p.st!=='En compra')m.push('Fecha de compra');
     if(p.fin==='Compra con banco'&&p.capital==null)m.push('Capital propio aportado');
     if(p.badId)m.push('ID mal ingresado (dice "'+p.rawId.slice(0,30)+'", debería ser '+p.id+')');
     if(p.banco&&!p.hasMonto)m.push('Datos del crédito ('+p.banco+')');
     if(p.hasMonto&&p.credSup)m.push('Fecha primer dividendo del crédito');
     if(p.hasMonto&&!p.hasDiv)m.push('Dividendo mensual del crédito');
-    if(p.rec&&!p.hasMonto)m.push('Crédito de la compra');
+    if(p.rec&&!p.hasMonto)m.push('Crédito de la compra (banco, monto, tasa, plazo)');
     if(p.contrib==null)m.push('Contribuciones');
     if(!rented(p)&&p.gc==null)m.push('Gastos comunes (no arrendada)');
     if(rented(p)&&p.rent==null)m.push('Arriendo mensual');
     if(rented(p)&&!p.cini)m.push('Inicio del contrato');
-    if(rented(p)&&!p.cfin)m.push('Fin del contrato');
     if(m.length)need.push({p,m})});
   const tot=need.reduce((a,x)=>a+x.m.length,0);
   document.getElementById('missCount').textContent=tot?`${tot} datos en ${need.length} propiedades · completar en el Registro v2`:'Registro completo';
@@ -442,14 +459,14 @@ function renderMissing(){
 function syncControls(){
   document.querySelectorAll('#segH button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===P.H));
   document.querySelectorAll('#segG button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===P.G));
-  const map={inH:'H',inG:'G',inR:'R',inY:'Y',inV:'V',inO:'O',inA:'A',inS:'S',inUF:'UF',inRec:'Rec'};
+  const map={inH:'H',inG:'G',inR:'R',inY:'Y',inV:'V',inO:'O',inA:'A',inS:'S',inUF:'UF',inGC:'GC',inRec:'Rec'};
   for(const id in map){const el=document.getElementById(id);if(document.activeElement!==el)el.value=P[map[id]]}
 }
-function update(){syncControls();const pr=project(P.H,P.G);renderState();renderResult(pr);try{renderCharts(pr)}catch(e){console.warn('Gráficos no disponibles',e)}renderMatrix();renderProps();renderMissing();renderYearly(pr);save()}
+function update(){syncControls();const pr=project(P.H,P.G);renderState();renderResult(pr);try{renderCharts(pr)}catch(e){console.warn('Gráficos no disponibles',e)}renderMatrix();renderProps();renderMissing();renderEstimates();renderYearly(pr);save()}
 
 document.querySelectorAll('#segH button').forEach(b=>b.onclick=()=>{P.H=+b.dataset.v;update()});
 document.querySelectorAll('#segG button').forEach(b=>b.onclick=()=>{P.G=+b.dataset.v;update()});
-[['inH','H',1,30],['inG','G',-5,10],['inR','R',0,25],['inY','Y',0,15],['inV','V',0,50],['inO','O',0,60],['inA','A',-5,5],['inS','S',0,10],['inUF','UF',1,1e6],['inRec','Rec',0,1]].forEach(([id,k,lo,hi])=>{
+[['inH','H',1,30],['inG','G',-5,10],['inR','R',0,25],['inY','Y',0,15],['inV','V',0,50],['inO','O',0,60],['inA','A',-5,5],['inS','S',0,10],['inUF','UF',1,1e6],['inGC','GC',0,1],['inRec','Rec',0,1]].forEach(([id,k,lo,hi])=>{
   const el=document.getElementById(id);el.addEventListener('change',()=>{let v=parseFloat(el.value);if(isNaN(v))v=DEF[k];v=Math.min(hi,Math.max(lo,v));if(k==='H')v=Math.round(v);P[k]=v;update()})});
 const rerender=()=>{try{renderCharts(project(P.H,P.G))}catch(e){}};
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',rerender)}catch(e){}
