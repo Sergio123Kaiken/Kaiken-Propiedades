@@ -17,7 +17,13 @@ today = dt.date.today().strftime("%d-%m-%Y")
 s = open(html, encoding="utf-8").read()
 m = re.search(r"/\*REG_START\*/(.*?)/\*REG_END\*/", s, re.S)
 old = json.loads(m.group(1) or "{}")
-changed_data = old.get("header") != header or old.get("rows") != rows
+# Se compara por ID e ignorando columnas calculadas por la planilla: el orden de filas
+# y el saldo/plusvalía que cambian solos no son cambios de datos.
+CALC = {"Saldo insoluto hoy (UF)", "Plusvalía sobre costo (%)"}
+def norm(h, rs):
+    keep = [i for i, c in enumerate(h) if c not in CALC]
+    return sorted(tuple(r[i] if i < len(r) else "" for i in keep) for r in rs)
+changed_data = old.get("header") != header or norm(header, rows) != norm(old.get("header") or header, old.get("rows") or [])
 same_month = (old.get("asof") or "")[3:] == today[3:]
 if not changed_data and same_month:
     print("Sin cambios"); sys.exit(3)
