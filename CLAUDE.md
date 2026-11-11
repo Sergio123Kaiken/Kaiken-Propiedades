@@ -47,6 +47,9 @@ Dashboard de estado y proyección del área inmobiliaria de Kaiken (sociedad Imp
 | 6 | Europa 401, Huechuraba | 5.367 | 5.367 | BancoEstado may 2023 | BancoEstado 3.971,25 UF, 3,97%, 12 años |
 | 2 | Patio Mayor 331, Huechuraba | 4.440 | 4.440 | N. Latorre / Itaú dic 2024 | Itaú 3.552 UF, 12 años |
 | 8 | Recoleta, Edificio Ilumina (deptos 25, 27, 85, 105) | 18.200 | 15.268 | Roberto Nieto / Banco de Chile sep 2026 | Supuesto: $360 MM, 4,5%, 20 años |
+| 13 | Av. Matta 1088, 1092 y 1094, Santiago (rol 3021-25, en compra) | 13.204 | 13.204 | Tinsa ID 585473, ene 2025 | Sin datos |
+| 14 | Av. Matta esq. San Diego 1108 y 1110, Santiago (roles 3021-38 y 39, en compra) | 11.344 | 11.344 | Tinsa ID 585473, ene 2025 (mismo informe que P13; total 24.548,10) | Sin datos |
+| 15 | San Diego 1126, 1128 y 1130, Santiago (rol 3021-27, en compra) | 12.907 | 12.907 | Tinsa ID 585472, ene 2025 | Sin datos |
 
 Arriendos: los del Registro v2 (desde el 5 oct 2026). Referencia de las tasaciones: Recoleta 57,85 UF/mes estimado, no se usa mientras esté en compra.
 
@@ -80,6 +83,7 @@ Rutina `trig_01Me84kUADGUDrJMLryzf4Sm` ("Kaiken: sincronizar dashboard inmobilia
 - Crédito de Moneda (Itaú, ya en el registro v2): confirmar destino de los fondos (el dashboard suma la deuda pero no la caja recibida).
 
 - Precios de compra y costos de adquisición de todas las propiedades.
+- P13, P14 y P15 (Av. Matta / San Diego, agregadas el 11 nov 2026, En compra): faltan costo total, financiamiento y fecha de compra; mientras tanto la tasación suma completa al patrimonio. Gastos comunes en "-" (locales a la calle, sin copropiedad). Contribuciones de P13 y P14 prorrateadas por valor desde el total del informe (86,4 UF/año). Los PDF de Tinsa no se pudieron subir a Drive/Tasaciones desde la sesión.
 - Monto y tasa real del crédito de Recoleta.
 - Rol de La Portada: PDF dice 288-11, planilla 248-11.
 - Posible error de rol en la tasación del depto 27 de Recoleta (2371-68 aparece también en el depto 85).
