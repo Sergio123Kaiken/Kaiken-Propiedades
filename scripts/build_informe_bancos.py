@@ -41,9 +41,9 @@ NAMES = {
     "P10": ("Huérfanos 1294, Of. 51", "Santiago"),
     "P11": ("Locales La Portada", "Independencia"),
     "P12": ("Patio Mayor, Of. 331", "Huechuraba"),
-    "P13": ("Av. Matta 1088-1094 (3 locales)", "Santiago"),
-    "P14": ("Av. Matta esq. San Diego 1108-1110", "Santiago"),
-    "P15": ("San Diego 1126-1130 (3 locales)", "Santiago"),
+    "P13": ("Av. Matta 1088-1094", "Santiago"),
+    "P14": ("Matta esq. San Diego 1108-1110", "Santiago"),
+    "P15": ("San Diego 1126-1130", "Santiago"),
 }
 TASADOR = {  # nombre corto de la fuente de valor
     "P09": "Propiteq (estimación)",
@@ -147,7 +147,7 @@ def row_cartera(p):
     eqp = p["val"] - p["debt"]
     nota = "¹" if p["id"] == "P09" else ("²" if p["bank"] and p["bank"] < p["val"] else "")
     st = {"Arrendada": "Arrendada", "Vacante": "En habilitación"}.get(p["st"], p["st"])
-    return (f'<tr><td class="l"><b>{e(p["name"])}</b><span class="sub">{e(p["comuna"])} · {e(p["tipo"])} · {uf(p["m2"])} m²</span></td>'
+    return (f'<tr><td class="l"><b>{e(p["name"])}</b><span class="sub">{e(p["comuna"])} · {e(p["tipo"]).replace('Local comercial','Locales')} · {uf(p["m2"])} m²</span></td>'
             f'<td class="l small">{e(p["tasador"])}{nota}<span class="sub">{e(p["ftas"])}</span></td>'
             f'<td class="num">{uf(p["val"])}</td><td class="num">{uf(p["debt"]) if p["debt"] else "—"}</td>'
             f'<td class="num b">{uf(eqp)}</td><td class="l small nw">{e(p["banco"]) if p["debt"] else "Sin deuda"}</td>'
@@ -221,7 +221,7 @@ tfoot td{{font-weight:700;border-top:1.5px solid {NAVY};border-bottom:0;color:{N
   </div>
   <div>
     <h1>Patrimonio inmobiliario</h1>
-    <p class="lead">{len(cartera)} propiedades en cartera en la Región Metropolitana, valorizadas según su última tasación, y {len(compra)} activos adicionales en proceso de compra.</p>
+    <p class="lead">{len(cartera)} propiedades en cartera en la Región Metropolitana, valorizadas según su última tasación, y {len(compra)} {"activo adicional" if len(compra)==1 else "activos adicionales"} en proceso de compra.</p>
   </div>
   <div class="kpis">
     <div class="kpi hero"><span class="l">Patrimonio neto</span><span class="v">{uf(E)} <small>UF</small></span><span class="s">Valor de tasación menos deuda</span></div>
@@ -264,7 +264,7 @@ tfoot td{{font-weight:700;border-top:1.5px solid {NAVY};border-bottom:0;color:{N
   </div>
   <div class="sec">
     <div class="sechead"><h2>Detalle de propiedades en cartera</h2><span>Ordenadas por valor de tasación</span></div>
-    <table><thead><tr><th class="l">Propiedad</th><th class="l">Tasación</th><th>Valor</th><th>Deuda</th><th>Patrimonio</th><th class="l">Acreedor</th><th class="l">Estado</th><th>Arriendo/mes</th></tr></thead>
+    <table><thead><tr><th class="l" style="width:30%">Propiedad</th><th class="l">Tasación</th><th>Valor</th><th>Deuda</th><th>Patrimonio</th><th class="l">Acreedor</th><th class="l">Estado</th><th>Arriendo/mes</th></tr></thead>
     <tbody>{''.join(row_cartera(p) for p in cartera)}</tbody>
     <tfoot><tr><td class="l">Total cartera</td><td></td><td class="num">{uf(V)}</td><td class="num">{uf(D)}</td><td class="num">{uf(E)}</td><td></td><td></td><td class="num">{uf1(RENT)}</td></tr></tfoot></table>
   </div>
