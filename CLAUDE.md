@@ -42,7 +42,7 @@ Dashboard de estado y proyección del área inmobiliaria de Kaiken (sociedad Imp
 | 9 | Nueva York 25 piso 3, Santiago | 8.225 | 8.225 | Propiteq online ene 2026 | Santander 3.990 UF, 12 años |
 | 7 | Ñuñoa, Los Talaveras 120 | 8.030 | 8.030 | BancoEstado ago 2026 | Sin crédito |
 | 1 | Moneda 812 Of. 705, Santiago | 9.800 | 7.840 | Itaú TMA251378 jul 2025 (también BancoEstado 6.509) | Crédito en cuotas 6.166,24 UF, 4,32% (4,41% efectiva), 96 cuotas de 76,34 UF desde 5 oct 2026; banco por confirmar |
-| 10 | Huérfanos 1294 Of. 51, Santiago | 7.657 | 7.657 | Propiteq online jul 2026 | Sin crédito |
+| 10 | Huérfanos 1294 Of. 51, Santiago | 6.303 | 6.303 | Transsa T21093-26-13, 28 oct 2026 (liquidación 4.727; reemplaza Propiteq online 7.657 por pedido del usuario el 20 nov 2026) | Sin crédito |
 | 4 | Work Center Miraflores, Renca | 7.545 | 7.545 | Banco de Chile (correo) nov 2025 | Banco de Chile 5.000 UF, 4,5%, 12 años |
 | 6 | Europa 401, Huechuraba | 5.367 | 5.367 | BancoEstado may 2023 | BancoEstado 3.971,25 UF, 3,97%, 12 años |
 | 2 | Patio Mayor 331, Huechuraba | 4.440 | 4.440 | N. Latorre / Itaú dic 2024 | Itaú 3.552 UF, 12 años |
